@@ -16,9 +16,13 @@ import (
 	"sync/atomic"
 
 	blake2b "github.com/minio/blake2b-simd"
+	murmurhash "github.com/rryqszq4/go-murmurhash"
+
 )
 
 const replicationFactor = 10
+var seed_32 uint32 = 0x12345678
+const seed uint64 = uint64(seed)
 
 var ErrNoHosts = errors.New("no hosts added")
 
@@ -54,7 +58,8 @@ func (c *Consistent) Add(host string) {
 
 	c.loadMap[host] = &Host{Name: host, Load: 0}
 	for i := 0; i < replicationFactor; i++ {
-		h := c.hash(fmt.Sprintf("%s%d", host, i))
+		//h := c.hash(fmt.Sprintf("%s%d", host, i))
+		h := c.mmhash3(host, uint64(i), seed)
 		c.hosts[h] = host
 		c.sortedSet = append(c.sortedSet, h)
 
@@ -102,19 +107,39 @@ func (c *Consistent) GetLeast(key string) (string, error) {
 		return "", ErrNoHosts
 	}
 
-	h := c.hash(key)
-	idx := c.search(h)
+	// Todo el código comentado en GetLeast es de BL
+	// Contador
+	var counter uint64 = 0
 
-	i := idx
+	//h := c.hash(key)
+	// idx := c.search(h)
+
+	// i := idx
 	for {
-		host := c.hosts[c.sortedSet[i]]
+		// host := c.hosts[c.sortedSet[i]]
+
+		// Hay que sacar un nuevo hash en cada iteraración (este es el salto)
+		h := c.mmhash3(key, counter, seed)
+		// BottleNeck? Estamos realizando una busqueda binaria en cada iter
+		// si es que hay mas de un fallo
+		idx := c.search(h)
+		host := c.hosts[c.sortedSet[idx]]
+
+		// Pregunta si la carga esta bien
 		if c.loadOK(host) {
+			// resettear el contador, ya no hay intentos fallidos por que
+			// logro encontrar un host
+			counter = 0
 			return host, nil
 		}
-		i++
-		if i >= len(c.hosts) {
-			i = 0
-		}
+		// i++
+		// if i >= len(c.hosts) {
+		//	i = 0
+		// }
+
+		// Llega aqui si el intento es fallido -> carga no esta bien
+		// Se suma uno por el intento fallido
+		counter += 1
 	}
 }
 
@@ -268,4 +293,19 @@ func (c *Consistent) delSlice(val uint64) {
 func (c *Consistent) hash(key string) uint64 {
 	out := blake2b.Sum512([]byte(key))
 	return binary.LittleEndian.Uint64(out[:])
+}
+
+
+func (c *Consistent) mmhash3(key string, counter uint64, seed uint64) {
+	// Habría que revisar si esta concatenacion es la forma correcta
+	concatenation := fmt.Sprintf("%s%d", key, counter)
+	keyArray := []byte(concatenation)
+	out := murmurhash.MurmurHash64A(keyArray, seed)
+
+	// Blake retornaba un array de 64 bytes representando el numero
+	// Hacemos lo mismo aquí
+	intArray := make([]byte, 64)
+	binary.LittleEndian.PutUint64(intArray, out)
+
+	return binary.LittleEndian.Uint64(intArray[:])
 }
