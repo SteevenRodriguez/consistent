@@ -299,7 +299,7 @@ func (c *Consistent) hash(key string) uint64 {
 }
 
 
-func (c *Consistent) mmhash3(key string, counter uint64, seed uint64) {
+func (c *Consistent) mmhash3(key string, counter uint64, seed uint64) uint64 {
 	// Habría que revisar si esta concatenacion es la forma correcta
 	concatenation := fmt.Sprintf("%s%d", key, counter)
 	keyArray := []byte(concatenation)
