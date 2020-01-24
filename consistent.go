@@ -21,7 +21,7 @@ import (
 )
 
 const replicationFactor = 10
-var seed_32 uint32 = 0x12345678
+const seed_32 uint32 = 0x12345678
 const seed uint64 = uint64(seed_32)
 
 var ErrNoHosts = errors.New("no hosts added")
@@ -59,7 +59,7 @@ func (c *Consistent) Add(host string) {
 	c.loadMap[host] = &Host{Name: host, Load: 0}
 	for i := 0; i < replicationFactor; i++ {
 		//h := c.hash(fmt.Sprintf("%s%d", host, i))
-		h := c.mmhash3(host, uint64(i), seed)
+		h := c.mmhash2(host, uint64(i), seed)
 		c.hosts[h] = host
 		c.sortedSet = append(c.sortedSet, h)
 
@@ -79,7 +79,7 @@ func (c *Consistent) Add(host string) {
 //
 // It returns ErrNoHosts if the ring has no hosts in it.
 // func (c *Consistent) Get(key string) (string, error) {
-func (c *Consistent) Get(key string, counter uint64, seed uint64) (string, error) {
+func (c *Consistent) Get(key string, counter uint64, seedval uint64) (string, error) {
 	c.RLock()
 	defer c.RUnlock()
 
@@ -89,7 +89,7 @@ func (c *Consistent) Get(key string, counter uint64, seed uint64) (string, error
 	// Se cambión la función para aceptar 
 
 	// h := c.hash(key)
-	h := c.mmhash3(key, counter, seed)
+	h := c.mmhash2(key, counter, seedval)
 	idx := c.search(h)
 	return c.hosts[c.sortedSet[idx]], nil
 }
@@ -122,7 +122,7 @@ func (c *Consistent) GetLeast(key string) (string, error) {
 		// host := c.hosts[c.sortedSet[i]]
 
 		// Hay que sacar un nuevo hash en cada iteraración (este es el salto)
-		h := c.mmhash3(key, counter, seed)
+		h := c.mmhash2(key, counter, seed)
 		// BottleNeck? Estamos realizando una busqueda binaria en cada iter
 		// si es que hay mas de un fallo
 		idx := c.search(h)
@@ -299,11 +299,11 @@ func (c *Consistent) hash(key string) uint64 {
 }
 
 
-func (c *Consistent) mmhash3(key string, counter uint64, seed uint64) {
+func (c *Consistent) mmhash2(key string, counter uint64, seedval uint64) uint64 {
 	// Habría que revisar si esta concatenacion es la forma correcta
 	concatenation := fmt.Sprintf("%s%d", key, counter)
 	keyArray := []byte(concatenation)
-	out := murmurhash.MurmurHash64A(keyArray, seed)
+	out := murmurhash.MurmurHash64A(keyArray, seedval)
 
 	// Blake retornaba un array de 64 bytes representando el numero
 	// Hacemos lo mismo aquí
