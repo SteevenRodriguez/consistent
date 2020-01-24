@@ -22,7 +22,7 @@ import (
 
 const replicationFactor = 10
 var seed_32 uint32 = 0x12345678
-const seed uint64 = uint64(seed_32)
+var seed uint64 = uint64(seed_32)
 
 var ErrNoHosts = errors.New("no hosts added")
 
