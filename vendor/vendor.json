@@ -1,0 +1,13 @@
+{
+	"comment": "",
+	"ignore": "",
+	"package": [
+		{
+			"checksumSHA1": "CD2Ycn5PpW38Uy+qwrNMcK2dgU4=",
+			"path": "github.com/rryqszq4/go-murmurhash",
+			"revision": "191966094b0332ba0d5b08be27002b1d31915c29",
+			"revisionTime": "2019-07-04T03:32:15Z"
+		}
+	],
+	"rootPath": "consistent"
+}
