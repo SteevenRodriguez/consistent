@@ -14,11 +14,26 @@ func TestAdd(t *testing.T) {
 	}
 }
 
-func TestGet(t *testing.T) {
+func TestGetNoRetries(t *testing.T) {
 	c := New()
 
 	c.Add("127.0.0.1:8000")
-	host, err := c.Get("127.0.0.1:8000")
+	// host, err := c.Get("127.0.0.1:8000")
+	host, err := c.Get("127.0.0.1:8000", 0, seed)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if host != "127.0.0.1:8000" {
+		t.Fatal("returned host is not what expected")
+	}
+}
+
+func TestGetThreeRetries(t *testing.T) {
+	c := New()
+
+	c.Add("127.0.0.1:8000")
+	host, err := c.Get("127.0.0.1:8000", 3, seed)
 	if err != nil {
 		t.Fatal(err)
 	}

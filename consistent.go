@@ -22,7 +22,7 @@ import (
 
 const replicationFactor = 10
 var seed_32 uint32 = 0x12345678
-const seed uint64 = uint64(seed)
+const seed uint64 = uint64(seed_32)
 
 var ErrNoHosts = errors.New("no hosts added")
 
@@ -78,15 +78,18 @@ func (c *Consistent) Add(host string) {
 // As described in https://en.wikipedia.org/wiki/Consistent_hashing
 //
 // It returns ErrNoHosts if the ring has no hosts in it.
-func (c *Consistent) Get(key string) (string, error) {
+// func (c *Consistent) Get(key string) (string, error) {
+func (c *Consistent) Get(key string, counter uint64, seed uint64) (string, error) {
 	c.RLock()
 	defer c.RUnlock()
 
 	if len(c.hosts) == 0 {
 		return "", ErrNoHosts
 	}
+	// Se cambión la función para aceptar 
 
-	h := c.hash(key)
+	// h := c.hash(key)
+	h := c.mmhash3(key, counter, seed)
 	idx := c.search(h)
 	return c.hosts[c.sortedSet[idx]], nil
 }
