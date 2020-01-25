@@ -17,10 +17,9 @@ import (
 
 	blake2b "github.com/minio/blake2b-simd"
 	murmurhash "github.com/rryqszq4/go-murmurhash"
-
 )
 
-const replicationFactor = 10
+const replicationFactor = 1
 const seed_32 uint32 = 0x12345678
 const seed uint64 = uint64(seed_32)
 
@@ -86,7 +85,7 @@ func (c *Consistent) Get(key string, counter uint64, seedval uint64) (string, er
 	if len(c.hosts) == 0 {
 		return "", ErrNoHosts
 	}
-	// Se cambión la función para aceptar 
+	// Se cambión la función para aceptar
 
 	// h := c.hash(key)
 	h := c.mmhash2(key, counter, seedval)
@@ -297,7 +296,6 @@ func (c *Consistent) hash(key string) uint64 {
 	out := blake2b.Sum512([]byte(key))
 	return binary.LittleEndian.Uint64(out[:])
 }
-
 
 func (c *Consistent) mmhash2(key string, counter uint64, seedval uint64) uint64 {
 	// Habría que revisar si esta concatenacion es la forma correcta
