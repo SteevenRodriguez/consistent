@@ -243,7 +243,7 @@ func (c *Consistent) MaxLoad() int64 {
 	if avgLoadPerNode == 0 {
 		avgLoadPerNode = 1
 	}
-	avgLoadPerNode = math.Ceil(avgLoadPerNode * 0.1)
+	avgLoadPerNode = math.Ceil(avgLoadPerNode * 0.3)
 	return int64(avgLoadPerNode)
 }
 
@@ -258,7 +258,7 @@ func (c *Consistent) loadOK(host string) bool {
 	if avgLoadPerNode == 0 {
 		avgLoadPerNode = 1
 	}
-	avgLoadPerNode = math.Ceil(avgLoadPerNode * 0.1)
+	avgLoadPerNode = math.Ceil(avgLoadPerNode * 0.3)
 
 	bhost, ok := c.loadMap[host]
 	if !ok {
