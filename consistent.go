@@ -258,7 +258,7 @@ func (c *Consistent) loadOK(host string) bool {
 	if avgLoadPerNode == 0 {
 		avgLoadPerNode = 1
 	}
-	avgLoadPerNode = math.Ceil(avgLoadPerNode * 3.0)
+	avgLoadPerNode = math.Ceil(avgLoadPerNode * 1.25)
 
 	bhost, ok := c.loadMap[host]
 	if !ok {
